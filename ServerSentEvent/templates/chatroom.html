@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ChatRoom</title>
+    <style>
+        #roomname{
+            font-size:60px;
+            margin:0 auto;
+            margin-top:50px;
+            text-align: center;
+
+        }
+        #board {
+
+            margin:0 auto;
+            width: 700px;
+            height: 500px;
+            border:1px solid #dddddd;
+            margin-top:30px;
+            overflow: auto;
+        }
+
+        #textinput {
+            margin-left: 275px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+        <div id="roomname">{{roomname}}</div>
+        <div id="board">123</div>
+        <div id="textinput">
+            <form action="/chatroom" method="POST">
+                <input type="text" name="comment" size="40" style=" height: 30px;font-size: 20px;">
+                <input type="button" id="connect"  value="连接" style="heigh:30px;font-size: 20px;">
+                <input type="submit" value="发表" style="height:30px;font-size: 20px;margin-left:10px">
+            </form>
+        </div>
+
+ <script>
+    <!--连接按钮,客户端发起链接-->
+    let state=document.getElementById("connect").value;
+    document.getElementById("connect").onclick=()=>{if(state==="连接"){
+        var source = new EventSource("{{ url_for('stream') }}");
+        source.onopen=function(event){
+            state="断开";
+            document.getElementById("connect").value="断开";
+            console.log('first connection');
+        };
+    }
+    else{
+        source.close();
+        state="连接";
+        document.getElementById("connect").value="连接";
+    }
+
+
+    //客户端收消息回调
+    source.onmessage=function(event){
+        var element= document.createElement("p");
+        element.innerText=event.data;
+        document.getElementById("board").appendChild(element)
+    };
+
+    //客户端连接服务端失败回调 readyState:0 未成功 1:成功 2:断开
+    source.addEventListener('error', function(event) {
+        console.log("Failed to connect to event stream. Is Redis running?");
+        source.close();
+        document.getElementById("connect").value="连接";
+        }, false);
+
+}
+
+
+  </script>
+
+</body>
+</html>

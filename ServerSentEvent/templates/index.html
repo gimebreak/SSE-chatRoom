@@ -1,0 +1,47 @@
+<html>
+<head>
+  <title>Flask-SSE Quickstart</title>
+</head>
+<body>
+  <h1>Flask-SSE Quickstart</h1>
+  <div id="board">
+    <input id="connect" type="button" value="connect">
+  </div>
+  <script>
+
+    document.getElementById("connect").onclick=()=>{
+        var source = new EventSource("{{ url_for('stream') }}");
+        source.onopen=function(event){
+            console.log('first connection');
+        };
+
+        source.onmessage=function(event){
+            var element= document.createElement("p");
+            element.innerText=event.data;
+            document.getElementById("board").appendChild(element)
+        };
+        source.addEventListener('error', function(event) {
+            console.log("Failed to connect to event stream. Is Redis running?");
+            source.close()
+            }, false);
+
+    }
+
+
+
+
+    // var source = new EventSource("{{ url_for('stream') }}");
+    // source.onopen=function(event){
+    //     console.log(event.data);
+    //     consoles
+    // };
+    // source.onmessage=function(event){
+    //     console.log(event.data);
+    // };
+    //
+    // source.addEventListener('error', function(event) {
+    //     console.log("Failed to connect to event stream. Is Redis running?");
+    // }, false);
+  </script>
+</body>
+</html>
