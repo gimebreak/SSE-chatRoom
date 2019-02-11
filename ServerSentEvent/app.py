@@ -1,7 +1,8 @@
 from flask import Flask,render_template,Response
-from flask_sse import sse
 from flask import request, current_app, json, stream_with_context
-import queue
+from gevent import queue
+from gevent.pywsgi import WSGIServer
+import gevent
 app = Flask(__name__)
 
 '''
@@ -12,7 +13,8 @@ client send msg still in a HTTP request
 subscribers=[]
 
 q=queue.Queue()
-messages=[q.put("data: "+str(i)+'\n\n')for i in range(1000)]
+q.put("retry:10000\ndata:start\n\n")
+
 
 @app.route('/stream')
 def stream():
@@ -31,13 +33,25 @@ def stream():
 
     return response
 
+@app.route('/comment',methods=["POST"])
+def comment():
+    def putdata():
+        res=request.form.get("comment")
+        q.put(res)
+        # q.put("data: " + str(res) + '\n\n')
+        q.put("retry:10000\ndata:"+str(res)+"\n\n")
+        print(res)
+    gevent.spawn(putdata())
+    return "is_comment"
+
+
 '''
 Cache-Control: no-cache
 Connection: keep-alive
 '''
 @app.route('/')
 def index():
-    return render_template("index.html")
+    return render_template("indextry.html")
 '''
 先访问/路径，建立链接，访问蓝图/stream
 另一个页面访问路径/hello 触发服务器向客户端发送消息
@@ -69,8 +83,12 @@ def index():
 def chatroom():
     if request.method=='GET':
         roomname="zhangze123"
-        return render_template('chatroom.html',roomname=roomname)
+        return render_template('chatroomtest.html',roomname=roomname)
+
+
 
 
 if __name__=='__main__':
-    app.run()
+    app.debug = True
+    server = WSGIServer(("", 5000), app)
+    server.serve_forever()

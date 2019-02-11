@@ -29,18 +29,38 @@
 </head>
 <body>
         <div id="roomname">{{roomname}}</div>
-        <div id="board">123</div>
+        <div id="board"></div>
         <div id="textinput">
-            <form action="/chatroom" method="POST">
-                <input type="text" name="comment" size="40" style=" height: 30px;font-size: 20px;">
-                <input type="button" id="connect"  value="连接" style="heigh:30px;font-size: 20px;">
-                <input type="submit" value="发表" style="height:30px;font-size: 20px;margin-left:10px">
-            </form>
-        </div>
 
- <script>
-    <!--连接按钮,客户端发起链接-->
+                输入框<input type="text" id="content" name="comment" size="40" style=" height: 30px;font-size: 20px;">
+                <input type="button" id="connect"  value="连接" style="heigh:30px;font-size: 20px;">
+                <input type="button" id="comment" value="发表" style="height:30px;font-size: 20px;margin-left:10px">
+
+        </div>
+ <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js">
+ </script>
+ <script type="text/javascript">
+
+
     let state=document.getElementById("connect").value;
+    console.log(state);
+
+    $("#comment").click(
+        function(e){
+            let data=$("#content").val();
+            $.ajax({
+                url:"/comment",
+                type:"post",
+                data:{'comment':data},
+                dataType:"json",
+                success:function(result){
+                    console.log(result)
+                }
+            })
+    });
+
+    <!--连接按钮,客户端发起链接-->
+
     document.getElementById("connect").onclick=()=>{if(state==="连接"){
         var source = new EventSource("{{ url_for('stream') }}");
         source.onopen=function(event){
@@ -58,6 +78,7 @@
 
     //客户端收消息回调
     source.onmessage=function(event){
+        console.log(event.data+"frontend");
         var element= document.createElement("p");
         element.innerText=event.data;
         document.getElementById("board").appendChild(element)
