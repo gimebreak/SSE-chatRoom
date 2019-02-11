@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ChatRoom</title>
+    <style>
+        #roomname{
+            font-size:60px;
+            margin:0 auto;
+            margin-top:50px;
+            text-align: center;
+
+        }
+        #board {
+
+            margin:0 auto;
+            width: 700px;
+            height: 500px;
+            border:1px solid #dddddd;
+            margin-top:30px;
+            overflow: auto;
+        }
+
+        #textinput {
+            margin-left: 275px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+        <div id="roomname">{{roomname}}</div>
+        <div id="board"></div>
+        <div id="textinput">
+
+                输入框<input type="text" id="content" name="comment" size="40" style=" height: 30px;font-size: 20px;">
+                <input type="button" id="comment" value="发表" style="height:30px;font-size: 20px;margin-left:10px">
+
+        </div>
+ <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js">
+ </script>
+ <script type="text/javascript">
+
+    $("#comment").click(
+        function(e){
+            let data=$("#content").val();
+            console.log(data);
+            $.ajax({
+                url:"/comment",
+                type:"post",
+                data:{'comment':data},
+                dataType:"json",
+                success:function(result){
+                    console.log(result)
+                }
+            })
+    });
+
+    <!--连接按钮,客户端发起链接-->
+    var source = new EventSource("{{ url_for('stream') }}");
+    source.onopen=function(event){
+        console.log('first connection');
+    };
+
+
+    //客户端收消息回调
+    source.onmessage=function(event){
+        var element= document.createElement("p");
+        element.innerText=event.data;
+        document.getElementById("board").appendChild(element)
+    };
+
+    //客户端连接服务端失败回调 readyState:0 未成功 1:成功 2:断开
+    source.addEventListener('error', function(event) {
+        console.log("Failed to connect to event stream. Is Redis running?");
+        source.close();
+        document.getElementById("connect").value="连接";
+        }, false);
+  </script>
+
+</body>
+</html>
